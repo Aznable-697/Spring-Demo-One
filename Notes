@@ -1,0 +1,697 @@
+                                                      |###############|
+                                                      |#PROJECT-NOTES#|
+                                                      |###############|
+======================================================================================================================================================= 
+
+  right click on project file --> click compare with --> HEAD source
+
+Use interfaces for good coding practices.
+
+===========================================================================================================================
+This Example application should do the following:|              **spring-demo-one** <-- Example Project
+=================================================|
+
+         1) Be an example of a configurable application
+
+         2) Easily change the coach for another sport
+                                ^-(Hockey, Cricket, Tennis, Gymnastics, Baseball, etc..)
+
+============================================================================================================================
+Spring Container:      |
+=======================|
+     Primary Functions:|
+=======================|
+           Create and manage objects 
+                               ^-(Inversion of Control)
+           Inject object's dependencies 
+                               ^-(Dependency Injection)
+============================================================================================================================
+
+Configuring Spring Container:
+-----------------------------
+               XML Configuration file
+                      ^-(legacy, but most legacy applications still use this)
+               Java Annotations
+                      ^-(Modern)
+               Java Source Code
+                      ^-(Modern)
+===========================================================================================================================
+
+Spring Development Process:      STEP-BY-STEP
+---------------------------
+1) Configure your Spring Beans
+
+      Example:
+      
+         File: applicationContext.xml
+    
+                  <beans ...>
+                         <bean id="myCoach"
+                               class="com.luv2code.springdemo.BaseballCoach">
+                         </bean>
+                  </beans>    
+       
+===========================================================================================================================           
+2) Create a Spring Container
+   _______________________________________________________________
+   |  Spring container is generically known as ApplicationContext|
+   |                                             ________________|
+   |   Specialized implementations:              |
+   |       ClassPathXmlApplicationContext        |
+   |       AnnotationConfigApplicationContext    |
+   |       GenericWebApplicationContext          |
+   |       others...                             |
+   |_____________________________________________| 
+        
+           Example:
+           
+                  ClassPathXmlApplicationContext context =
+                       new ClassPathXmlApplicationContext("applicationContext.xml)";
+                                                                      ^-(Name of configuration file)
+===========================================================================================================================                                                                      
+3) Retrieve Beans from Spring Container
+
+     Example:
+        Coach theCoach = context.getBean("myCoach", Coach.class);
+        
+===========================================================================================================================
+What is a Spring Bean?|
+======================|
+
+A "Spring Bean" is simply a Java object.
+ When Java objects are created by the Spring Container, then Spring refers to them as "Spring Beans".
+   Spring Beans are created from normal Java Classes...Just like Java objects.
+-----   
+Spring Reference Manual:
+      ^- In spring, the objects that form the backbone of your application and that are managed by the Spring IoC 
+  container are called beans. A bean is an object that is instantiated, assembled, and otherwise managed by a spring
+  IoC container. Otherwise, a bean is simply one of many objects in your application. Beans, and the dependencies among 
+  them, are reflected in the configuration metadata used by a container.
+--------
+  In the early days, there was a term called "Java Beans". Spring Beans have a similar concept but Spring Beans do not
+  follow all of the rigorous requirements of Java Beans.
+----------
+In summary, whenever you see "Spring Bean", just think Java object.
+
+===========================================================================================================================
+
+Why do we specify the Coach interface in getBean()?
+---------------------------------------------------
+ Example:
+     
+     Coach theCoach = context.getBean("myCoach", Coach.class);
+-----
+
+Answer: 
+    When we pass the interface to the method, behind the secens Spring will cast the object for you.
+    
+    Example:
+         
+         context.getBean("myCoach", Coach.class)
+         
+     However, there are some slight differences than normal casting.
+  
+  From Spring docs:
+      
+      Behaves the same as getBean(string), but provides a measure of type safety by throwing a
+      BeanNotOfRequiredTypeException if the bean is not of the required type. This means that ClassCastException
+      can't be thrown on casting the result correctly, as can happen with getBean(string).
+              Source: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory
+                      /BeanFactory.html#getBean-java.lang.String-java.lang.Class-     
+                      
+===========================================================================================================================
+Logging:|
+========|
+
+****How to do Loggin in Spring Boot *****
+-------------------------------
+Come back and figure this out. I think it would be a good thing to have
+Seams like needed to learn how to do per each project?
+
+Sites for help with logging here:
+
+https://www.udemy.com/course/spring-hibernate-tutorial/learn/lecture/12128430#overview
+
+https://gist.github.com/darbyluv2code/cfb16c2fd1825a947d8faca3724b47a9
+
+===========================================================================================================================
+Dependency Injections:|
+======================|                                           dependency = helper
+
+   Demo Example:
+   
+      ~ Our Coach already provides daily workouts
+      
+            **Now will also provide daily fortunes                 Coach--------|
+                                                                                |
+                 ***New helper: FortuneService***                               |
+                    ^-*This is a Dependency*-^                             FortuneService
+
+
+----------------|
+Injection Types:|----------------------------------------------------------------------------------------------------------
+----------------|
+      
+      There are many types of injections with Spring
+        
+         We will cover the two most common
+         
+       ---> Constructor Injection
+         
+       ---> Setter Injection
+         
+     Will talk about "auto-wiring" in the Annotations section later
+
+--------------------|
+Development Process:|--------------------------------------------------------------------------------------------------------
+--------------------|
+
+      --> Constructor Injection                                Step-By-Step
+         
+         1) Define the dependency interface and class
+         
+          Example:
+            ___________________________          
+            | File:FortuneService.java|                -- Interface Example shown here --
+            ______________________________________
+            |  public interface FortuneService { |
+            |     public String getFortune();    |
+            |     }                              |
+            |____________________________________|   
+            _______________________________  
+           | File:HappyFortuneService.java |            -- Class Example shown here --
+           _________________________________________________________________      
+           |  public class HappyFortuneService implements FortuneService{  |
+           |                                                               |
+           |          public String getFortune() {                         |
+           |              return "Today is your lucky day!";               |
+           |              }                                                |
+           |             }                                                 |
+           |_______________________________________________________________|      
+              
+         2) Create a constructor in your class for injections
+         
+          Example:
+          _________________________
+          |File:BaseballCoach.java|
+          ___________________________________________________________________  
+          |       public class BaseballCoach implements Coach {             |
+          |                                                                 |
+          |         private FortuneService fortuneService; <-Define field   |
+          |                                                                 |
+          |       public BaseballCoach(FortuneService theFortuneService) {  |
+          |         fortuneService = theFortuneService;                     |
+          |       }                      ^-Define constructor               |
+          |       ...                                                       |
+          |      }                                                          |
+          |_________________________________________________________________|
+          
+         3) Configure the dependency injection in Spring config file
+         
+          Example:
+         _______________________________ 
+         | File:applicationContext.xml |
+         _______________________________________________________________ 
+         |   <bean id="myFortuneService"                               |
+         |        class="com.luv2code.springdemo.HappyFortuneService"> | <--Define dependency / helper
+         |   </bean>                                                   |
+         |                                                             |
+         |   <bean id="myCoach"                                        |
+         |        class="com.Luv2code.springdemo.BaseballCoach">       | <--Inject the dependency / helper         
+         |          <constructor-arg ref="myFortuneService" />         |    using "constructor injection"
+         |   </bean>                                                   |
+         |_____________________________________________________________|
+         
+==================================================================================================================================
+FAQ:|
+====
+   What is the purpose for the no arg constructor?
+   
+   Question:
+     I was wondering why you created a no arg constructor? i thought that they are implied by Java and only required
+     when you also have an overloaded constructor. Or is this a Spring specific thing?
+
+  Answer:
+     When you don't define any constructor in your class, compiler defines default one for you, however when you declare
+     any constructor (in your example you have already defined a parameterized constructor), compiler doesn't do it for you.
+     
+     Since you have defined a constructor in class code, compiler didn't create default one. while creating object you are 
+     invoking default one, which doesn't exist in class code. Then the code gives an compilation error.
+
+================================================================================================================================     
+Dependency Injections cont.:|
+============================|
+--------------------|
+Development Process |---------------------------------------------------------------------------------------------------------------
+--------------------|
+
+         --> Setter Injection                                           Step-By-Step
+         
+         1) Create setter method(s) in your class for injections
+         ________________________
+         |File:CricketCoach.java|
+          _____________________________________________________________________________
+          |       public class CricketCoach implements Coach {                        |
+          |                                                                           |
+          |         private FortuneService fortuneService;                            |
+          |                                                                           |
+          |         public CricketCoach() {                                           |
+          |         }                                                                 |
+          |                                                                           |
+          |       public void setFortuneService(FortuneService fortuneService) {      |
+          |         this.fortuneService = fortuneService;                             |
+          |       }                                                                   |
+          |       ...                                                                 |
+          |      }                                                                    |
+          |___________________________________________________________________________|
+         
+         2) Configure the dependency injection in Spring config file
+         ______________________________
+         | File:applicationContext.xml|
+       ___________________________________________________________________ 
+       |  <bean id="myFortuneService"                                    |
+       |      class="com.luv2code.springdemo.HappyFortuneService">       |
+       |  </bean>                                                        |
+       |                                                                 | 
+       |  <bean id="myCricketCoach"                                      |
+       |     class="com.luv2code.springdemo.CricketCoach">               |
+       |                                                                 |
+       |  <property name="fortuneService" ref="myFortuneService" />      |
+       |                                                                 |
+       |  </bean>                                                        |
+       |_________________________________________________________________|
+
+======================================================================================================================================
+Injecting Literal Values: |
+==========================|
+
+                         -----------------------emailAddress: thebestcoach@luv2code.com
+                         |                          
+                         |   -------------------team: Sunrisers Hyderabad
+                         |   |                       
+                      CricketCoach------
+                                       |
+                                FortuneService   
+                                
+---------------------|
+Development Process: |-------------------------------------------------------------------------------------------------------------------                               
+---------------------|                                                              Step-By-Step
+
+         1) Create setter method(s) in your class for injections
+        __________________________ 
+        | File:CricketCoach.java |
+        _____________________________________________________________
+        | public class CricketCoach implements Coach {              |
+        |                                                           |
+        |   private String emailAddress;                            |
+        |   private String team;                                    |
+        |                                                           |
+        |   public void setEmailAddress(String emailAddress) ...    |
+        |                                                           |
+        |   public void setTeam(String team) ...                    |
+        |                                                           |
+        |   ...                                                     |
+        |  }                                                        |
+        |___________________________________________________________| 
+        
+         2) Configure the injection in Spring config file
+        _______________________________ 
+        | File:applicationContext.xml |
+     ___________________________________________________________________________    
+     |  <bean id="myCricketCoach"                                               |
+     |         class="com.luv2code.springdemo.CricketCoach">                    |
+     |                                                                          |
+     |    <property name"fortuneService" ref="myFortuneService" />              |
+     |                                                                          |
+     |    <property name="emailAddress" value="thebestcoach@luv2code.com" />    |
+     |                                                                          |
+     |    <property name="team" value ="Sunrisers Hyderabad" />                 |
+     |                                                                          |
+     |  </bean>                                                                 |
+     |__________________________________________________________________________|
+     
+=========================================================================================================================================
+FAQ: |
+=====|
+   Why do we use CricketCoach class instead of Coach Interface?
+   
+   Question:
+      For the CricketCoach examples with Setter Injection, why do we use the CricketCoach class instead of the Coach interface?
+      
+   Answer:
+     The getTeam() method is only defined in the CricketCoach class. It is not part of the Coach interface.
+     
+     As a result, you would need the folllowing code:
+     
+          CricketCoach theCricketCoach =
+        context.getBean("myCricketCoach", CricketCoach.class);
+        
+------
+   
+   The Coach interface has two methods: getDailyWorkout and getDailyFortune
+   
+------
+  
+  When you retrieve a bean from the Spring container using the Coach interface:
+    
+    Coach theCricketCoach = context.getBean("myCricketCoach", Coach.class);
+    
+  You only have access to the methods defined in the Coach interface: GetDailyWorkout
+  and getDailyFortune. Even though the actual implementation has additional methods, you
+  only have visibility to methods that are defined at the Coach interface level.
+  
+-----
+
+  When you retrieve a bean from the Spring container using the CricketCoach class:
+  
+    CricketCoacch theCricketCoach = 
+  context.getBeam("myCricketCoach", CricketCoach,class);
+  
+ You have access to the methods defined in the Coach interface:
+   getDailyWorkout and getDailyFortune.
+   
+ ALSO, you have access to the additional methods defined in the CricketCoach class: getTeam, setTeam.
+ 
+-----
+  
+   The bottom line is it depends on how you retrieve the object and
+    assign it...that determines the visibility you have to the methods.
+
+====================================================================================================================================
+Read from a Properties File: |
+=============================|
+
+-------------|
+Dev Process: |----------------------------------------------------------------------------------------------------------------------
+-------------|                                                          Step-By-Step
+
+   1) Create Properties File
+  ________________________ 
+  | File:sport.properties|
+  |______________________|___________________
+  |   foo.email=myeasycoach@luv2code.com    |
+  |    foo.team=Royal Challengers Bangalore |
+  |_________________________________________|
+  
+   2) Load Properties File in Spring config file
+   
+      File:applicationContext.xml
+      
+         <context:property-placeholder location="classpath:sport.properties" />
+   
+   
+   3) Reference values from Properties File
+   
+     File:applicationContext.xml
+     
+        <bean id="myCricketCoach"
+            class="com.luv2code.springdemo.CricketCoach">
+           ...
+           <property name="emailAddress" value="${foo.email}" />
+           <property name="team" value="${foo.team}" />
+        
+        </bean> 
+   
+   
+=======================================================================================================================================================
+Practice Activity # 2 |
+======================|                                                            Start date: 03/08/22   End Date: 03/22/22
+ 
+                             Dependency Injection with XML Configuration
+                             
+                1) Define a new implementation for the FortuneService.
+                
+                  a) When the getFortune() method is called it should return a random fortune from the array.
+                  
+                  b) Your fortune service should define three fortunes in an array.
+                  
+                2) Inject your new dependency into your Coach implementation.
+                
+                3) Test your application to verify you are retrieving random fortunes.
+                
+======================================================================================================================================================= 
+Bean Scopes and Life-cycle|
+==========================|
+
+                                  Bean Scopes
+                         * Scope refers to the life-cycle of a bean
+                         
+                         * How long does the bean live?
+                         
+                         * How many instances are created?
+                         
+                         * How is the bean shared?
+                         
+-----------------------------------------------------------------------------------------------------------------------  
+                       
+            By Default the scope is: Singleton
+            
+           <beans ...>
+           
+               <bean id="myCoach"
+                   class="com.lov2code.springdemo.TrackCoach">
+                ...
+               </bean>
+               
+            </beans>
+            
+----------------------------------------------------------------------------------------------------------------    
+        
+                    What is a Singleton?
+                    
+             * Spring Container creates only one instance of the bean, by default
+             
+             * It is cached in memory
+             
+             * All requests for the bean
+                *will return a SHARED reference to the SAME bean
+                
+                                                                                                   Spring
+      Coach the Coach = context.getBean("myCoach", Coach.class); <---------------------------->
+      ...                                                                                        TrackCoach
+      Coach alphaCoach = context.getBean("myCoach", Coach.class); <----------------------------------^
+      
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+                     Explicitly Specify Bean Scope
+                     
+         <beans ... >
+         
+               <bean id="myCoach"
+                   class="com.lov2code.springdemo.TrackCoach"
+                   scope="singleton">
+                ...
+               </bean>
+               
+            </beans>   
+            
+-------------------------------------------------------------------------------------------------------------------------      
+            
+                       Additional Spring Bean Scopes
+           Scope         |              Description
+     --------------------|----------------------------------------------------------------      
+      Singleton          |     Create a single shared instance of the bean. Default Scope.
+      Prototype          |     Creates a new bean instance for each container request.
+      Request            |     Scoped to an HTTP web request. Only used for web apps.
+      Session            |     Scoped to an HTTP web session. Only used for web apps.
+      Global-session     |     Scoped to a global HTTP web session. Only used for web apps.
+      
+-------------------------------------------------------------------------------------------------------------------------------      
+      
+                              Prototype Scope Example
+                              
+                 Prototype scope: new object for each request
+                 
+            <beans ... >
+         
+               <bean id="myCoach"
+                   class="com.lov2code.springdemo.TrackCoach"
+                   scope="prototype">
+                ...
+               </bean>
+               
+            </beans>   
+            
+                                                                                                        Spring
+      Coach the Coach = context.getBean("myCoach", Coach.class); <--------------------------------->  TrackCoach
+      ...                                                                                       
+      Coach alphaCoach = context.getBean("myCoach", Coach.class); <--------------------------------->  TrackCoach
+            
+--------------------------------------------------------------------------------------------------------------------------------------------------------                
+ Bean Life-cycle: |               
+==================|
+
+     Container___\     Bean     ____\  Dependencies _____\   Internal Spring ___\ Your Custom____
+     Started     /  Instantiated    /  Injected          /   Processing         / Init Method    }
+                                                                                               }
+                                                                                             }
+                                                                                           }
+                       Bean is Ready for Use         <-----------------------------------}
+                     -----------------------
+                      Container Is Shutdown
+                               |
+                               V
+                           Your Custom  ___________\  STOP
+                          Destroy Method           /
+                
+------------------------------------------------------------------------------------------------------------------------------------------------------------                
+                
+                           Bean Life-cycle Methods/Hooks
+                           
+         * You can add custom code during bean initialization
+           * Calling custom business logic methods
+           * Setting up handles to resources (db, sockets, file etc)
+           
+         * You can add custom code during bean destruction
+           * Calling custom business logic method
+           * Clean up handles to resources (db, sockets, files etc)
+           
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                                       Init: method configuration
+                   <beans ... >
+                   
+                       <bean id="myCoach"
+                           class="com.luv2code.springdemo.TrackCoach"
+                       init-method="doMyStartupStuff">
+                       ...
+                       </bean>
+                       
+                   </beans>
+                   
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                                     Destroy: method configuration
+                 <beans ... >
+                   
+                       <bean id="myCoach"
+                           class="com.luv2code.springdemo.TrackCoach"
+                       init-method="doMyStartupStuff">
+                       destroy-method="doMyCleanupStuff">
+                       ...
+                       </bean>
+                       
+                   </beans>
+                   
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                                  Development Process                    Step-By-Step
+                                  
+               1) Define your methods for init and destroy
+               
+               2) Configure the method names in Spring config file    
+               
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                               Special Note: 
+                             Defining init and destroy methods - Method Signatures
+
+
+            When using XML configuration, I want to provide additional details regarding the method signatures of the init-method and destroy-method.
+
+                  > Access modifier
+                       ^-The method can have any access modifier (public, protected, private)
+
+                  > Return type
+                        ^-The method can have any return type. However, "void' is most commonly used. 
+                          If you give a return type just note that you will not be able to capture the return value. 
+                          As a result, "void" is commonly used.
+
+                  > Method name
+                        ^-The method can have any method name.
+
+                  > Arguments
+                        ^-The method can not accept any arguments. The method should be no-arg.                          
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                              Special Note:
+                             About Destroy Lifecycle and Prototype Scope
+                             
+            There is a subtle point you need to be aware of with "prototype" scoped beans.
+
+             For "prototype" scoped beans, Spring does not call the destroy method.  Gasp!  
+
+             ---
+
+             In contrast to the other scopes, Spring does not manage the complete lifecycle 
+             of a prototype bean: the container instantiates, configures, and otherwise assembles 
+             a prototype object, and hands it to the client, with no further record of that prototype instance.
+
+            Thus, although initialization lifecycle callback methods are called on all objects regardless of scope, 
+            in the case of prototypes, configured destruction lifecycle callbacks are not called. 
+            The client code must clean up prototype-scoped objects and release expensive resources 
+            that the prototype bean(s) are holding. 
+
+            ---
+
+            This also applies to both XML configuration and Annotation-based configuration.
+
+            ---
+
+            QUESTION: 
+               ^-How can I create code to call the destroy method on prototype scope beans
+               
+             ANSWER:
+                ^-You can destroy prototype beans but custom coding is required.
+
+                 You can download the example source code from here: destroy-prototype-scope-bean-with-custom-processor-xml-config.zip
+
+
+
+            Development Process
+
+               1) Create a custom bean processor. This bean processor will keep track of prototype scoped beans. 
+               During shutdown it will call the destroy() method on the prototype scoped beans. 
+               The custom processor is configured in the spring config file.
+
+	          <!-- Bean custom processor to handle calling destroy methods on prototype scoped beans -->
+                    <bean id="customProcessor"
+    		            class="com.luv2code.springdemo.MyCustomBeanProcessor">
+   	           </bean>
+
+               2) The prototype scoped beans MUST implement the DisposableBean interface.
+                This interface defines a "destroy()" method.
+
+                      public class TrackCoach implements Coach, DisposableBean {
+ 
+	                    ...
+	
+	                      // add a destroy method
+	                         @Override
+	                        public void destroy() throws Exception {
+		                    System.out.println("TrackCoach: inside method doMyCleanupStuffYoYo");		
+	                         }
+ 
+                           }
+
+               3) The Spring configuration does not require use the destroy-method attribute. You can safely remove it.
+
+                 	<bean id="myCoach"
+ 		                class="com.luv2code.springdemo.TrackCoach"
+ 		             init-method="doMyStartupStuff"
+ 		             scope="prototype">	
+ 		
+ 		             <!-- set up constructor injection -->
+ 		              <constructor-arg ref="myFortuneService" />
+ 	                 </bean>
+ 	                 
+               4) In this app, BeanLifeCycleDemoApp.java is the main program.  
+               TrackCoach.java is the prototype scoped bean. TrackCoach implements 
+               the DisposableBean interface and provides the destroy() method. 
+               The custom bean processing is handled in the MyCustomBeanProcessor class.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+=======================================================================================================================================================
+Practice Activity # 3 |
+======================|                                                            Start date: 03/22/22   End Date: 00/00/00
+ 
+                             Bean Scopes with XML Configuration
+                             
+                1) Add bean scopes to your new Coach implementation that you created in one of the previous activities.                  
+                  
+                2) Test singleton scope and prototype scope as I did in the videos.
+                
+                3) Verify that the bean scopes are being applied as desired.
+                
+======================================================================================================================================================= 
+
+=======================================================================================================================================================================
